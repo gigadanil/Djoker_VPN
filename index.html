@@ -81,13 +81,19 @@ textarea {
   text-align: center;
   border: 1px solid #ddd;
 }
+.hint {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 4px;
+}
 </style>
 </head>
 <body>
- 
+
 <h2>🔒 Подключение VPN</h2>
 <p id="status">Выбери приложение и нажми кнопку.</p>
- 
+
 <div class="card">
   <div class="section-title">Hiddify — Android и iPhone</div>
   <a id="hiddify" class="btn purple" href="#">
@@ -100,7 +106,7 @@ textarea {
     <a href="https://apps.apple.com/app/hiddify-proxy-vpn/id6596777532" target="_blank"> App Store</a>
   </div>
 </div>
- 
+
 <div class="card">
   <div class="section-title">v2rayTun — Android и iPhone</div>
   <a id="v2raytun" class="btn blue" href="#">
@@ -113,7 +119,7 @@ textarea {
     <a href="https://apps.apple.com/app/v2raytun/id6476628951" target="_blank"> App Store</a>
   </div>
 </div>
- 
+
 <div class="card">
   <div class="section-title">Ключ вручную</div>
   <textarea id="cfg" readonly></textarea>
@@ -121,36 +127,62 @@ textarea {
     <span class="icon">📋</span>
     <span class="label">Скопировать ключ</span>
   </button>
+  <p class="hint">Скопируй и вставь в любое VPN приложение</p>
 </div>
- 
+
 <script>
 function getKey() {
   const hash = new URLSearchParams(location.hash.slice(1));
   const search = new URLSearchParams(location.search);
-  return hash.get("key") || search.get("key") || "";
+  return hash.get("key") || search.get("key") || search.get("cfg") || "";
 }
- 
+
 const encoded = getKey();
+const statusEl = document.getElementById("status");
+const cfgEl = document.getElementById("cfg");
+const hBtn = document.getElementById("hiddify");
+const vBtn = document.getElementById("v2raytun");
+
 if (!encoded) {
-  document.getElementById("status").textContent = "Ключ не найден в ссылке.";
+  statusEl.textContent = "Ключ не найден в ссылке.";
 } else {
   let key = encoded;
   try { key = decodeURIComponent(encoded); } catch(e) {}
- 
-  document.getElementById("cfg").value = key;
-  document.getElementById("hiddify").href = "hiddify://import/" + encodeURIComponent(key);
-  document.getElementById("v2raytun").href = "v2raytun://install-config?url=" + encodeURIComponent(key);
- 
-  setTimeout(() => { location.href = "hiddify://import/" + encodeURIComponent(key); }, 300);
+
+  cfgEl.value = key;
+
+  const hiddifyScheme = "hiddify://import/" + encodeURIComponent(key);
+  const v2raytunScheme = "v2raytun://install-config?url=" + encodeURIComponent(key);
+
+  hBtn.href = hiddifyScheme;
+  vBtn.href = v2raytunScheme;
+
+  // Android intent fallback
+  hBtn.addEventListener("click", () => {
+    setTimeout(() => {
+      location.href =
+        "intent://import/" + encodeURIComponent(key) +
+        "#Intent;scheme=hiddify;package=app.hiddify.com;end";
+    }, 600);
+  });
+
+  vBtn.addEventListener("click", () => {
+    setTimeout(() => {
+      location.href =
+        "intent://install-config?url=" + encodeURIComponent(key) +
+        "#Intent;scheme=v2raytun;package=com.v2raytun.android;end";
+    }, 600);
+  });
+
+  statusEl.textContent = "Нажми кнопку приложения. Если не открылось — скопируй ключ вручную.";
 }
- 
+
 document.getElementById("copyBtn").addEventListener("click", async () => {
-  const key = document.getElementById("cfg").value;
+  const key = cfgEl.value;
   try {
     await navigator.clipboard.writeText(key);
   } catch {
-    const t = document.getElementById("cfg");
-    t.select();
+    cfgEl.select();
     document.execCommand("copy");
   }
   document.getElementById("copyBtn").querySelector(".label").textContent = "Скопировано!";
