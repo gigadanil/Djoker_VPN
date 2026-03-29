@@ -31,6 +31,18 @@ h2 { margin: 0 0 6px; font-size: 20px; }
   letter-spacing: 0.5px;
   margin: 0 0 10px;
 }
+.ios-hint {
+  display: none;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #5d4037;
+  line-height: 1.5;
+}
+.ios-hint b { display: block; margin-bottom: 4px; font-size: 14px; }
 .btn {
   display: flex;
   align-items: center;
@@ -94,6 +106,12 @@ textarea {
 <h2>🔒 Подключение VPN</h2>
 <p id="status">Выбери приложение и нажми кнопку.</p>
 
+<div class="ios-hint" id="iosHint">
+  <b>📱 Для iPhone / iPad</b>
+  Кнопки ниже могут не открыть приложение из Telegram.<br><br>
+  Нажми <b>⋯</b> или значок браузера в правом верхнем углу → <b>Открыть в Safari</b> — и затем нажми кнопку приложения.
+</div>
+
 <div class="card">
   <div class="section-title">Hiddify — Android и iPhone</div>
   <a id="hiddify" class="btn purple" href="#">
@@ -131,6 +149,12 @@ textarea {
 </div>
 
 <script>
+// Определяем iOS
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+if (isIOS) {
+  document.getElementById("iosHint").style.display = "block";
+}
+
 function getKey() {
   const hash = new URLSearchParams(location.hash.slice(1));
   const search = new URLSearchParams(location.search);
@@ -158,23 +182,27 @@ if (!encoded) {
   vBtn.href = v2raytunScheme;
 
   // Android intent fallback
-  hBtn.addEventListener("click", () => {
-    setTimeout(() => {
-      location.href =
-        "intent://import/" + encodeURIComponent(key) +
-        "#Intent;scheme=hiddify;package=app.hiddify.com;end";
-    }, 600);
-  });
+  if (!isIOS) {
+    hBtn.addEventListener("click", () => {
+      setTimeout(() => {
+        location.href =
+          "intent://import/" + encodeURIComponent(key) +
+          "#Intent;scheme=hiddify;package=app.hiddify.com;end";
+      }, 600);
+    });
 
-  vBtn.addEventListener("click", () => {
-    setTimeout(() => {
-      location.href =
-        "intent://install-config?url=" + encodeURIComponent(key) +
-        "#Intent;scheme=v2raytun;package=com.v2raytun.android;end";
-    }, 600);
-  });
+    vBtn.addEventListener("click", () => {
+      setTimeout(() => {
+        location.href =
+          "intent://install-config?url=" + encodeURIComponent(key) +
+          "#Intent;scheme=v2raytun;package=com.v2raytun.android;end";
+      }, 600);
+    });
+  }
 
-  statusEl.textContent = "Нажми кнопку приложения. Если не открылось — скопируй ключ вручную.";
+  statusEl.textContent = isIOS
+    ? "iPhone: сначала открой в Safari (см. подсказку выше)."
+    : "Нажми кнопку приложения. Если не открылось — скопируй ключ.";
 }
 
 document.getElementById("copyBtn").addEventListener("click", async () => {
