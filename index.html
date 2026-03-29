@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VPN Connect</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  padding: 20px;
+  max-width: 420px;
+  margin: 0 auto;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+h2 { margin: 0 0 6px; font-size: 20px; }
+#status { color: #555; font-size: 14px; margin: 0 0 16px; }
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+.btn.purple { background: #5e35b1; }
+.btn.blue { background: #1565c0; }
+.btn.alt {
+  background: #f1f1f1;
+  color: #111;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+.btn .icon { font-size: 20px; width: 24px; text-align: center; }
+.btn .label { flex: 1; text-align: left; }
+.btn .os { font-size: 11px; opacity: 0.7; }
+textarea {
+  width: 100%;
+  min-height: 90px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-size: 12px;
+  font-family: monospace;
+  resize: none;
+  background: #fafafa;
+  color: #333;
+}
+.store-links { display: flex; gap: 8px; margin-top: 8px; }
+.store-links a {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f1f1f1;
+  color: #333;
+  text-decoration: none;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+</style>
+</head>
+<body>
+ 
+<h2>🔒 Подключение VPN</h2>
+<p id="status">Выбери приложение и нажми кнопку.</p>
+ 
+<div class="card">
+  <div class="section-title">Hiddify — Android и iPhone</div>
+  <a id="hiddify" class="btn purple" href="#">
+    <span class="icon">📱</span>
+    <span class="label">Открыть в Hiddify</span>
+    <span class="os">Android / iOS</span>
+  </a>
+  <div class="store-links">
+    <a href="https://play.google.com/store/apps/details?id=app.hiddify.com" target="_blank">▶ Google Play</a>
+    <a href="https://apps.apple.com/app/hiddify-proxy-vpn/id6596777532" target="_blank"> App Store</a>
+  </div>
+</div>
+ 
+<div class="card">
+  <div class="section-title">v2rayTun — Android и iPhone</div>
+  <a id="v2raytun" class="btn blue" href="#">
+    <span class="icon">📱</span>
+    <span class="label">Открыть в v2rayTun</span>
+    <span class="os">Android / iOS</span>
+  </a>
+  <div class="store-links">
+    <a href="https://play.google.com/store/apps/details?id=com.v2raytun.android" target="_blank">▶ Google Play</a>
+    <a href="https://apps.apple.com/app/v2raytun/id6476628951" target="_blank"> App Store</a>
+  </div>
+</div>
+ 
+<div class="card">
+  <div class="section-title">Ключ вручную</div>
+  <textarea id="cfg" readonly></textarea>
+  <button id="copyBtn" class="btn alt" style="margin-top:8px">
+    <span class="icon">📋</span>
+    <span class="label">Скопировать ключ</span>
+  </button>
+</div>
+ 
+<script>
+function getKey() {
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const search = new URLSearchParams(location.search);
+  return hash.get("key") || search.get("key") || "";
+}
+ 
+const encoded = getKey();
+if (!encoded) {
+  document.getElementById("status").textContent = "Ключ не найден в ссылке.";
+} else {
+  let key = encoded;
+  try { key = decodeURIComponent(encoded); } catch(e) {}
+ 
+  document.getElementById("cfg").value = key;
+  document.getElementById("hiddify").href = "hiddify://import/" + encodeURIComponent(key);
+  document.getElementById("v2raytun").href = "v2raytun://install-config?url=" + encodeURIComponent(key);
+ 
+  setTimeout(() => { location.href = "hiddify://import/" + encodeURIComponent(key); }, 300);
+}
+ 
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const key = document.getElementById("cfg").value;
+  try {
+    await navigator.clipboard.writeText(key);
+  } catch {
+    const t = document.getElementById("cfg");
+    t.select();
+    document.execCommand("copy");
+  }
+  document.getElementById("copyBtn").querySelector(".label").textContent = "Скопировано!";
+  setTimeout(() => {
+    document.getElementById("copyBtn").querySelector(".label").textContent = "Скопировать ключ";
+  }, 2000);
+});
+</script>
+</body>
+</html>
